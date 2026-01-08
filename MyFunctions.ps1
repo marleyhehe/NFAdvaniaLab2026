@@ -7,8 +7,19 @@ function Get-UserData {
         [string]$DatabaseFile = "$PSScriptRoot\git\NFAdvaniaLab2026\LabFiles\MyLabFile.csv"
     )
     
-    $MyUserList = Get-Content -Path $DatabaseFile | ConvertFrom-Csv
-    $MyUserList
+    try {
+        $MyUserList = Get-Content -Path $DatabaseFile | ConvertFrom-Csv
+        $MyUserList
+    }
+    catch [System.IO.FileNotFoundException] {
+        Write-Error -Message "DatabaseFile not found: $DatabaseFile" -ErrorAction Stop
+    }
+    catch [System.IO.ItemNotFoundException] {
+        Write-Error -Message "DatabaseFile not found: $DatabaseFile" -ErrorAction Stop
+    }
+    catch {
+        Write-Error -Message "Unknown error occurred while reading database: $($_.Exception.Message)" -ErrorAction Stop
+    }
 }
 
 <#
@@ -147,8 +158,9 @@ function Confirm-CourseID {
     }
     
     if ($ErroneousUsers.Count -gt 0) {
-        Write-Output "Found $($ErroneousUsers.Count) user(s) with erroneous ID(s):"
-        $ErroneousUsers | Format-Table -AutoSize
+        foreach ($ErroneousUser in $ErroneousUsers) {
+            Write-Error -Message "User '$($ErroneousUser.Name)' has erroneous ID: $($ErroneousUser.Id)" -ErrorAction Continue
+        }
     }
     else {
         Write-Output "All user IDs are valid (numbers only)."
@@ -185,4 +197,7 @@ class Participant {
         return "$($this.Name),$($this.Age),$($this.Color),$($this.Id)"
     }
 }
+
+
+### LAB 5 
 
